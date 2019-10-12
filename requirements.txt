@@ -1,2 +1,3 @@
 # Pin minor version of dependencies to allow for security updates
 kubernetes==10.0
+PyYAML==5.1

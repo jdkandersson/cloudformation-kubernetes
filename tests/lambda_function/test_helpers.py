@@ -54,8 +54,8 @@ def test_calculate_client_kind(group_version_kind):
 @pytest.mark.parametrize(
     "body, expected_namespace",
     [
-        ({}, None),
-        ({"metadata": {}}, None),
+        ({}, "default"),
+        ({"metadata": {}}, "default"),
         ({"metadata": {"namespace": "namespace 1"}}, "namespace 1"),
     ],
     ids=["empty", "metadata empty", "namespace in metadata"],

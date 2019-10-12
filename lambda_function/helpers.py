@@ -100,10 +100,11 @@ def calculate_namespace(*, body: typing.Dict[str, typing.Any]) -> typing.Optiona
         The namespace argument value.
 
     """
+    default_namespace = "default"
     metadata = body.get("metadata")
     if metadata is None:
-        return None
-    return metadata.get("namespace")
+        return default_namespace
+    return metadata.get("namespace", default_namespace)
 
 
 def get_api_version(*, body: typing.Dict[str, typing.Any]) -> str:
