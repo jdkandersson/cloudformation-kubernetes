@@ -466,3 +466,205 @@ def test_update_client_function_namespace_raises(mocked_get_function: mock.Magic
     assert return_value == operations.ModifyReturn(
         "FAILURE", "(400)\nReason: reason 1\n"
     )
+
+
+def test_delete_get_api_version_call(mocked_get_api_version: mock.MagicMock):
+    """
+    GIVEN mocked body and mocked get_api_version
+    WHEN delete is called with the body
+    THEN get_api_version is called with the body.
+    """
+    mock_body = mock.MagicMock()
+
+    operations.delete(body=mock_body, physical_name="physical name 1")
+
+    mocked_get_api_version.assert_called_once_with(body=mock_body)
+
+
+def test_delete_get_api_version_raises(mocked_get_api_version: mock.MagicMock):
+    """
+    GIVEN mocked get_api_version that raises ApiVersionMissingError
+    WHEN delete is called
+    THEN failure response is returned.
+    """
+    mocked_get_api_version.side_effect = exceptions.ApiVersionMissingError
+
+    return_value = operations.delete(
+        body=mock.MagicMock(), physical_name="physical name 1"
+    )
+
+    assert return_value == operations.ModifyReturn("FAILURE", "apiVersion is required.")
+
+
+def test_delete_get_kind_call(mocked_get_kind: mock.MagicMock):
+    """
+    GIVEN mocked body and mocked get_kind
+    WHEN delete is called with the body
+    THEN get_kind is called with the body.
+    """
+    mock_body = mock.MagicMock()
+
+    operations.delete(body=mock_body, physical_name="physical name 1")
+
+    mocked_get_kind.assert_called_once_with(body=mock_body)
+
+
+def test_delete_get_kind_raises(mocked_get_kind: mock.MagicMock):
+    """
+    GIVEN mocked body and mocked get_kind that raises KindMissingError
+    WHEN delete is called with the body
+    THEN failure response is returned.
+    """
+    mocked_get_kind.side_effect = exceptions.KindMissingError
+
+    return_value = operations.delete(
+        body=mock.MagicMock(), physical_name="physical name 1"
+    )
+
+    assert return_value == operations.ModifyReturn("FAILURE", "kind is required.")
+
+
+def test_delete_get_function_call(
+    mocked_get_api_version: mock.MagicMock,
+    mocked_get_kind: mock.MagicMock,
+    mocked_get_function: mock.MagicMock,
+):
+    """
+    GIVEN mocked get_api_version, get_kind and get_function
+    WHEN delete is called with the body
+    THEN get_function is called with get_api_version and get_kind return value and the
+        delete operation.
+    """
+    operations.delete(body=mock.MagicMock(), physical_name="physical name 1")
+
+    mocked_get_function.assert_called_once_with(
+        api_version=mocked_get_api_version.return_value,
+        kind=mocked_get_kind.return_value,
+        operation="delete",
+    )
+
+
+def test_delete_client_function_call(mocked_get_function: mock.MagicMock):
+    """
+    GIVEN mocked get_function that returns a client function and False for namespaced
+        and physical name
+    WHEN delete is called with the physical name
+    THEN the client function is called with the name as the physical name.
+    """
+    mock_client_function = mock.MagicMock()
+    mocked_get_function.return_value = helpers.GetFunctionReturn(
+        mock_client_function, False
+    )
+    physical_name = "name 1"
+
+    operations.delete(body=mock.MagicMock(), physical_name=physical_name)
+
+    mock_client_function.assert_called_once_with(name=physical_name)
+
+
+def test_delete_client_function_return(mocked_get_function: mock.MagicMock):
+    """
+    GIVEN mocked body and mocked get_function that returns a client function that
+        returns the metadata with a name and False for namespaced
+    WHEN delete is called
+    THEN success response is returned.
+    """
+    mock_client_function = mock.MagicMock()
+    mock_return = mock.MagicMock()
+    mock_return.metadata.name = "name 1"
+    mock_client_function.return_value = mock_return
+    mocked_get_function.return_value = helpers.GetFunctionReturn(
+        mock_client_function, False
+    )
+
+    return_value = operations.delete(body=mock.MagicMock(), physical_name="name 1")
+
+    assert return_value == operations.ModifyReturn("SUCCESS", None)
+
+
+def test_delete_client_function_raises(mocked_get_function: mock.MagicMock):
+    """
+    GIVEN mocked body and mocked get_function that returns a client function that
+        raises ApiException and False for namespaced
+    WHEN delete is called
+    THEN failure response is returned.
+    """
+    mock_client_function = mock.MagicMock()
+    mock_client_function.side_effect = kubernetes.client.rest.ApiException(
+        "400", "reason 1"
+    )
+    mocked_get_function.return_value = helpers.GetFunctionReturn(
+        mock_client_function, False
+    )
+
+    return_value = operations.delete(body=mock.MagicMock(), physical_name="name 1")
+
+    assert return_value == operations.ModifyReturn(
+        "FAILURE", "(400)\nReason: reason 1\n"
+    )
+
+
+def test_delete_client_function_namespace_call(mocked_get_function: mock.MagicMock):
+    """
+    GIVEN mocked get_function that returns a client function and True for namespaced
+        and physical name with namespace and name
+    WHEN delete is called with the body and physical name
+    THEN the client function is called with name and physical name.
+    """
+    mock_client_function = mock.MagicMock()
+    mocked_get_function.return_value = helpers.GetFunctionReturn(
+        mock_client_function, True
+    )
+    name = "name 1"
+    namespace = "namespace 1"
+
+    operations.delete(body=mock.MagicMock(), physical_name=f"{namespace}/{name}")
+
+    mock_client_function.assert_called_once_with(namespace=namespace, name=name)
+
+
+def test_delete_client_function_namespace_return(mocked_get_function: mock.MagicMock):
+    """
+    GIVEN mocked get_function that returns a client function that returns the metadata
+        with a name and True for namespaced
+    WHEN delete is called
+    THEN success response is returned.
+    """
+    mock_client_function = mock.MagicMock()
+    mock_return = mock.MagicMock()
+    mock_return.metadata.namespace = "namespace 1"
+    mock_return.metadata.name = "name 1"
+    mock_client_function.return_value = mock_return
+    mocked_get_function.return_value = helpers.GetFunctionReturn(
+        mock_client_function, True
+    )
+
+    return_value = operations.delete(
+        body=mock.MagicMock(), physical_name="namespace 1/name 1"
+    )
+
+    assert return_value == operations.ModifyReturn("SUCCESS", None)
+
+
+def test_delete_client_function_namespace_raises(mocked_get_function: mock.MagicMock):
+    """
+    GIVEN mocked get_function that returns a client function that raises ApiException
+        and True for namespaced
+    WHEN delete is called
+    THEN failure response is returned.
+    """
+    mock_client_function = mock.MagicMock()
+    mock_client_function.side_effect = kubernetes.client.rest.ApiException(
+        "400", "reason 1"
+    )
+    mocked_get_function.return_value = helpers.GetFunctionReturn(
+        mock_client_function, True
+    )
+
+    return_value = operations.delete(
+        body=mock.MagicMock(), physical_name="namespace 1/name 1"
+    )
+
+    assert return_value == operations.ModifyReturn(
+        "FAILURE", "(400)\nReason: reason 1\n"
+    )
