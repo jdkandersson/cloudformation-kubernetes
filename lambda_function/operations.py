@@ -64,7 +64,7 @@ def create(*, body: typing.Dict[str, typing.Any]) -> CreateReturn:
         return CreateReturn("FAILURE", str(exc), None)
 
 
-class UpdateReturn(typing.NamedTuple):
+class ModifyReturn(typing.NamedTuple):
     """
     Structure of the update return value.
 
@@ -78,7 +78,7 @@ class UpdateReturn(typing.NamedTuple):
     reason: typing.Optional[str]
 
 
-def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> UpdateReturn:
+def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyReturn:
     """
     Execute update command.
 
@@ -94,7 +94,7 @@ def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> UpdateR
         api_version = helpers.get_api_version(body=body)
         kind = helpers.get_kind(body=body)
     except exceptions.ParentError as exc:
-        return UpdateReturn("FAILURE", str(exc))
+        return ModifyReturn("FAILURE", str(exc))
     client_function, namespaced = helpers.get_function(
         api_version=api_version, kind=kind, operation="update"
     )
@@ -103,14 +103,52 @@ def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> UpdateR
     if not namespaced:
         try:
             client_function(body=body, name=physical_name)
-            return UpdateReturn("SUCCESS", None)
+            return ModifyReturn("SUCCESS", None)
         except kubernetes.client.rest.ApiException as exc:
-            return UpdateReturn("FAILURE", str(exc))
+            return ModifyReturn("FAILURE", str(exc))
 
     # Handling namespaced
     namespace, name = physical_name.split("/")
     try:
         client_function(body=body, namespace=namespace, name=name)
-        return UpdateReturn("SUCCESS", None)
+        return ModifyReturn("SUCCESS", None)
     except kubernetes.client.rest.ApiException as exc:
-        return UpdateReturn("FAILURE", str(exc))
+        return ModifyReturn("FAILURE", str(exc))
+
+
+def delete(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyReturn:
+    """
+    Execute delete command.
+
+    Args:
+        body: The body to delete.
+        physical_name: The namespace (if namespaced) and name of the resource.
+
+    Returns:
+        Information about the outcome of the operation.
+
+    """
+    try:
+        api_version = helpers.get_api_version(body=body)
+        kind = helpers.get_kind(body=body)
+    except exceptions.ParentError as exc:
+        return ModifyReturn("FAILURE", str(exc))
+    client_function, namespaced = helpers.get_function(
+        api_version=api_version, kind=kind, operation="delete"
+    )
+
+    # Handling non-namespaced cases
+    if not namespaced:
+        try:
+            client_function(name=physical_name)
+            return ModifyReturn("SUCCESS", None)
+        except kubernetes.client.rest.ApiException as exc:
+            return ModifyReturn("FAILURE", str(exc))
+
+    # Handling namespaced
+    namespace, name = physical_name.split("/")
+    try:
+        client_function(namespace=namespace, name=name)
+        return ModifyReturn("SUCCESS", None)
+    except kubernetes.client.rest.ApiException as exc:
+        return ModifyReturn("FAILURE", str(exc))
