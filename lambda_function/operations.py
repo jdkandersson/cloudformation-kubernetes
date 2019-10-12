@@ -62,3 +62,55 @@ def create(*, body: typing.Dict[str, typing.Any]) -> CreateReturn:
         )
     except kubernetes.client.rest.ApiException as exc:
         return CreateReturn("FAILURE", str(exc), None)
+
+
+class UpdateReturn(typing.NamedTuple):
+    """
+    Structure of the update return value.
+
+    Attrs:
+        status: The status of the operation. Is SUCCESS or FAILURE.
+        reason: If the status is FAILURE, the reason for the failure.
+
+    """
+
+    status: str
+    reason: typing.Optional[str]
+
+
+def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> UpdateReturn:
+    """
+    Execute update command.
+
+    Args:
+        body: The body to update.
+        physical_name: The namespace (if namespaced) and name of the resource.
+
+    Returns:
+        Information about the outcome of the operation.
+
+    """
+    try:
+        api_version = helpers.get_api_version(body=body)
+        kind = helpers.get_kind(body=body)
+    except exceptions.ParentError as exc:
+        return UpdateReturn("FAILURE", str(exc))
+    client_function, namespaced = helpers.get_function(
+        api_version=api_version, kind=kind, operation="update"
+    )
+
+    # Handling non-namespaced cases
+    if not namespaced:
+        try:
+            client_function(body=body, name=physical_name)
+            return UpdateReturn("SUCCESS", None)
+        except kubernetes.client.rest.ApiException as exc:
+            return UpdateReturn("FAILURE", str(exc))
+
+    # Handling namespaced
+    namespace, name = physical_name.split("/")
+    try:
+        client_function(body=body, namespace=namespace, name=name)
+        return UpdateReturn("SUCCESS", None)
+    except kubernetes.client.rest.ApiException as exc:
+        return UpdateReturn("FAILURE", str(exc))
