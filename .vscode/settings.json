@@ -1,0 +1,5 @@
+{
+    "python.pythonPath": "/Users/private/src/cloudformation-kubernetes/venv/bin/python3",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true
+}
