@@ -84,35 +84,68 @@ def test_deployment_update(nginx_deployment_info, _nginx_deployment):
 
 
 @pytest.fixture
-def namespace_info():
-    """Kubernetes namespace."""
-    path = "tests/lambda_function/kubernetes_fixtures/namespace.yaml"
+def cluster_role_info():
+    """Kubernetes cluster role."""
+    path = "tests/lambda_function/kubernetes_fixtures/cluster-role.yaml"
     with open(path) as in_file:
-        deployment_dict = yaml.safe_load(in_file)
-    name = "namespace-1"
+        cluster_role_dict = yaml.safe_load(in_file)
+    name = "cluster-role-1"
 
-    yield deployment_dict, name
+    yield cluster_role_dict, name
 
-    core_v1_api = kubernetes.client.CoreV1Api()
-    core_v1_api.delete_namespace(name=name)
+    rbac_v1_api = kubernetes.client.RbacAuthorizationV1Api()
+    rbac_v1_api.delete_cluster_role(name=name)
 
 
 @pytest.mark.integration
-def test_namespace_create(namespace_info):
+def test_cluster_role_create(cluster_role_info):
     """
-    GIVEN namespace as dictionary
-    WHEN create is called with the namespace dictionary as a body
-    THEN the namespace is created.
+    GIVEN cluster role as dictionary
+    WHEN create is called with the cluster role dictionary as a body
+    THEN the cluster role is created.
     """
-    namespace_dict, name = namespace_info
+    cluster_role_dict, name = cluster_role_info
 
-    result = operations.create(body=namespace_dict)
+    result = operations.create(body=cluster_role_dict)
 
     # Check result
     assert result.status == "SUCCESS"
     assert result.physical_name == name
-    # Check that the namespace is created
-    core_v1_api = kubernetes.client.CoreV1Api()
-    response = core_v1_api.list_namespace()
+    # Check that the cluster role is created
+    rbac_v1_api = kubernetes.client.RbacAuthorizationV1Api()
+    response = rbac_v1_api.list_cluster_role()
     assert response.items
     assert name in {item.metadata.name for item in response.items}
+
+
+@pytest.fixture
+def _cluster_role(cluster_role_info):
+    """Create Kubernetes cluster role."""
+    cluster_role_dict, _name = cluster_role_info
+    result = operations.create(body=cluster_role_dict)
+
+    assert result.status == "SUCCESS"
+
+
+@pytest.mark.integration
+def test_cluster_role_update(cluster_role_info, _cluster_role):
+    """
+    GIVEN cluster role as dictionary that has been created
+    WHEN a label is added to the cluster role and update is called with the cluster role
+        dictionary as a body and physical name
+    THEN the cluster role is updated.
+    """
+    cluster_role_dict, name = cluster_role_info
+    cluster_role_dict["metadata"]["labels"] = {"key": "value"}
+
+    result = operations.update(body=cluster_role_dict, physical_name=name)
+
+    # Check result
+    assert result.status == "SUCCESS"
+    # Check that the cluster_role is created
+    rbac_v1_api = kubernetes.client.RbacAuthorizationV1Api()
+    response = rbac_v1_api.list_cluster_role()
+    assert response.items
+    metadata_dict = {item.metadata.name: item.metadata for item in response.items}
+    assert name in metadata_dict
+    assert metadata_dict[name].labels["key"] == "value"
