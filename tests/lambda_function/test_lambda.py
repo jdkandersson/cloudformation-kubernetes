@@ -219,7 +219,7 @@ def test_update_update_call(
     """
     GIVEN mocked operations.update and update Cloudformation request
     WHEN lambda_handler is called with the request
-    THEN update is called with the body from the request.
+    THEN update is called with the body and physical resource id from the request.
     """
     event = {
         **exists_lambda_event,
@@ -300,6 +300,136 @@ def test_update_put_failure(
         **exists_lambda_event,
         **{
             "RequestType": "Update",
+            "ResponseURL": "response url 1",
+            "StackId": "stack id 1",
+            "RequestId": "request id 1",
+            "LogicalResourceId": "logical resource id 1",
+            "PhysicalResourceId": "physical resource id 1",
+        },
+    }
+
+    index.lambda_handler(event, mock.MagicMock())
+
+    mocked_urllib3_pool_manager.return_value.request.assert_called_once_with(
+        "PUT",
+        "response url 1",
+        body=json.dumps(
+            {
+                "StackId": "stack id 1",
+                "RequestId": "request id 1",
+                "LogicalResourceId": "logical resource id 1",
+                "Status": "FAILURE",
+                "PhysicalResourceId": "physical resource id 1",
+                "Reason": "reason 1",
+            }
+        ).encode("utf-8"),
+    )
+
+
+@pytest.mark.lambda_function
+def test_delete_physical_resource_id_missing(create_lambda_event):
+    """
+    GIVEN CloudFormation delete request without physical resource id
+    WHEN lambda_handler is called with the request
+    THEN MalformedEventError is raised.
+    """
+    event = {**create_lambda_event, "RequestType": "Delete"}
+
+    with pytest.raises(exceptions.MalformedEventError):
+        index.lambda_handler(event, mock.MagicMock())
+
+
+@pytest.mark.lambda_function
+def test_delete_delete_call(
+    mocked_operations_delete: mock.MagicMock,
+    exists_lambda_event,
+    _mocked_urllib3_pool_manager,
+    _mocked_json_dumps,
+):
+    """
+    GIVEN mocked operations.delete and delete Cloudformation request
+    WHEN lambda_handler is called with the request
+    THEN delete is called with the body and physical resource id from the request.
+    """
+    event = {
+        **exists_lambda_event,
+        **{
+            "RequestType": "Delete",
+            "ResourceProperties": {"key": "value"},
+            "PhysicalResourceId": "physical resource id 1",
+        },
+    }
+
+    index.lambda_handler(event, mock.MagicMock())
+
+    mocked_operations_delete.assert_called_once_with(
+        body={"key": "value"}, physical_name="physical resource id 1"
+    )
+
+
+@pytest.mark.lambda_function
+def test_delete_put_success(
+    mocked_operations_delete: mock.MagicMock,
+    exists_lambda_event,
+    mocked_urllib3_pool_manager: mock.MagicMock,
+):
+    """
+    GIVEN mocked operations.delete that returns success response and
+        urllib3.PoolManager and delete Cloudformation request
+    WHEN lambda_handler is called with the request
+    THEN PoolManager.request PUT is called with the ResponseURL from the request with
+        the correct body.
+    """
+    mocked_operations_delete.return_value = operations.ExistsReturn("SUCCESS", None)
+    event = {
+        **exists_lambda_event,
+        **{
+            "RequestType": "Delete",
+            "ResponseURL": "response url 1",
+            "StackId": "stack id 1",
+            "RequestId": "request id 1",
+            "LogicalResourceId": "logical resource id 1",
+            "PhysicalResourceId": "physical resource id 1",
+        },
+    }
+
+    index.lambda_handler(event, mock.MagicMock())
+
+    mocked_urllib3_pool_manager.return_value.request.assert_called_once_with(
+        "PUT",
+        "response url 1",
+        body=json.dumps(
+            {
+                "StackId": "stack id 1",
+                "RequestId": "request id 1",
+                "LogicalResourceId": "logical resource id 1",
+                "Status": "SUCCESS",
+                "PhysicalResourceId": "physical resource id 1",
+            }
+        ).encode("utf-8"),
+    )
+
+
+@pytest.mark.lambda_function
+def test_delete_put_failure(
+    mocked_operations_delete: mock.MagicMock,
+    exists_lambda_event,
+    mocked_urllib3_pool_manager: mock.MagicMock,
+):
+    """
+    GIVEN mocked operations.delete that returns failure response and
+        urllib3.PoolManager and delete Cloudformation request
+    WHEN lambda_handler is called with the request
+    THEN PoolManager.request PUT is called with the ResponseURL from the request with
+        the correct body.
+    """
+    mocked_operations_delete.return_value = operations.ExistsReturn(
+        "FAILURE", "reason 1"
+    )
+    event = {
+        **exists_lambda_event,
+        **{
+            "RequestType": "Delete",
             "ResponseURL": "response url 1",
             "StackId": "stack id 1",
             "RequestId": "request id 1",

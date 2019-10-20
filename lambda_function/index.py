@@ -116,6 +116,20 @@ def lambda_handler(event, _context):
         response_body["PhysicalResourceId"] = parameters.physical_resource_id
         if result.status == "FAILURE":
             response_body["Reason"] = result.reason
+    elif parameters.request_type == "Delete":
+        # Check that physical resource id is given
+        if parameters.physical_resource_id is None:
+            raise exceptions.MalformedEventError(
+                "PhysicalResourceId is required for Update event."
+            )
+        result = operations.delete(
+            body=parameters.resource_properties,
+            physical_name=parameters.physical_resource_id,
+        )
+        response_body["Status"] = result.status
+        response_body["PhysicalResourceId"] = parameters.physical_resource_id
+        if result.status == "FAILURE":
+            response_body["Reason"] = result.reason
     else:
         raise exceptions.MalformedEventError(
             f"{parameters.request_type} RequestType has not been implemented."
