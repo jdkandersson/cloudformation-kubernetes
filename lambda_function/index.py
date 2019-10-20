@@ -1,12 +1,37 @@
 """Handle CloudFormation requests."""
 
+import dataclasses
+import typing
+
 from . import exceptions
 from . import operations
 
 
-def lambda_handler(event, _context):
-    """Handle CLoudFormation custom resource requests."""
-    # Checking that required keys are in the event
+@dataclasses.dataclass
+class Parameters:
+    """Expected parameters for the lambda function."""
+
+    request_type: str
+    resource_properties: typing.Dict[str, typing.Any]
+    response_url: str
+    stack_id: str
+    request_id: str
+    logical_resource_id: str
+
+
+def parameters_from_event(*, event: typing.Dict[str, typing.Any]) -> Parameters:
+    """
+    Construct Parameters from lambda event.
+
+    Raise MalformedEventError if a required property is missing.
+
+    Args:
+        event: The details for the lambda event.
+
+    Returns:
+        The Parameters initialized using the event.
+
+    """
     request_type = event.get("RequestType")
     if request_type is None:
         raise exceptions.MalformedEventError(
@@ -38,9 +63,24 @@ def lambda_handler(event, _context):
             "LogicalResourceId is a required property in the event."
         )
 
-    if request_type == "Create":
-        operations.create(body=resource_properties)
+    return Parameters(
+        request_type,
+        resource_properties,
+        response_url,
+        stack_id,
+        request_id,
+        logical_resource_id,
+    )
+
+
+def lambda_handler(event, _context):
+    """Handle CLoudFormation custom resource requests."""
+    # Checking that required keys are in the event
+    parameters = parameters_from_event(event=event)
+
+    if parameters.request_type == "Create":
+        operations.create(body=parameters.resource_properties)
     else:
         raise exceptions.MalformedEventError(
-            f"{request_type} RequestType has not been implemented."
+            f"{parameters.request_type} RequestType has not been implemented."
         )
