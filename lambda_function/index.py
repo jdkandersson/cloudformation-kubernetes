@@ -45,16 +45,6 @@ def parameters_from_event(*, event: typing.Dict[str, typing.Any]) -> Parameters:
         raise exceptions.MalformedEventError(
             "ResourceProperties is a required property in the event."
         )
-    metadata = resource_properties.get("metadata")
-    if metadata is None:
-        raise exceptions.MalformedEventError(
-            "ResourceProperties is required to have metadata."
-        )
-    name = metadata.get("name")
-    if name is None:
-        raise exceptions.MalformedEventError(
-            "ResourceProperties metadata is required to have a name."
-        )
     response_url = event.get("ResponseURL")
     if response_url is None:
         raise exceptions.MalformedEventError(

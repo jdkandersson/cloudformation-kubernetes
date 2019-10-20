@@ -14,7 +14,7 @@ from lambda_function import operations
     "event",
     [
         {
-            "ResourceProperties": {"metadata": {"name": "name 1"}},
+            "ResourceProperties": {"key": "value"},
             "ResponseURL": "response url 1",
             "StackId": "stack id 1",
             "RequestId": "request id 1",
@@ -22,7 +22,7 @@ from lambda_function import operations
         },
         {
             "RequestType": "Not Implemented",
-            "ResourceProperties": {"metadata": {"name": "name 1"}},
+            "ResourceProperties": {"key": "value"},
             "ResponseURL": "response url 1",
             "StackId": "stack id 1",
             "RequestId": "request id 1",
@@ -37,44 +37,28 @@ from lambda_function import operations
         },
         {
             "RequestType": "Create",
-            "ResourceProperties": {},
-            "ResponseURL": "response url 1",
+            "ResourceProperties": {"key": "value"},
             "StackId": "stack id 1",
             "RequestId": "request id 1",
             "LogicalResourceId": "logical resource id 1",
         },
         {
             "RequestType": "Create",
-            "ResourceProperties": {"metadata": {}},
-            "ResponseURL": "response url 1",
-            "StackId": "stack id 1",
-            "RequestId": "request id 1",
-            "LogicalResourceId": "logical resource id 1",
-        },
-        {
-            "RequestType": "Create",
-            "ResourceProperties": {"metadata": {"name": "name 1"}},
-            "StackId": "stack id 1",
-            "RequestId": "request id 1",
-            "LogicalResourceId": "logical resource id 1",
-        },
-        {
-            "RequestType": "Create",
-            "ResourceProperties": {"metadata": {"name": "name 1"}},
+            "ResourceProperties": {"key": "value"},
             "ResponseURL": "response url 1",
             "RequestId": "request id 1",
             "LogicalResourceId": "logical resource id 1",
         },
         {
             "RequestType": "Create",
-            "ResourceProperties": {"metadata": {"name": "name 1"}},
+            "ResourceProperties": {"key": "value"},
             "ResponseURL": "response url 1",
             "StackId": "stack id 1",
             "LogicalResourceId": "logical resource id 1",
         },
         {
             "RequestType": "Create",
-            "ResourceProperties": {"metadata": {"name": "name 1"}},
+            "ResourceProperties": {"key": "value"},
             "ResponseURL": "response url 1",
             "StackId": "stack id 1",
             "RequestId": "request id 1",
@@ -84,8 +68,6 @@ from lambda_function import operations
         "RequestType missing",
         "RequestType notimplemented",
         "ResourceProperties missing",
-        "ResourceProperties metadata missing",
-        "ResourceProperties metadata name missing",
         "ResponseURL missing",
         "StackId missing",
         "RequestId missing",
@@ -117,17 +99,12 @@ def test_create_create_call(
     """
     event = {
         **valid_lambda_event,
-        **{
-            "RequestType": "Create",
-            "ResourceProperties": {"metadata": {"name": "name 1"}},
-        },
+        **{"RequestType": "Create", "ResourceProperties": {"key": "value"}},
     }
 
     index.lambda_handler(event, mock.MagicMock())
 
-    mocked_operations_create.assert_called_once_with(
-        body={"metadata": {"name": "name 1"}}
-    )
+    mocked_operations_create.assert_called_once_with(body={"key": "value"})
 
 
 @pytest.mark.lambda_function
