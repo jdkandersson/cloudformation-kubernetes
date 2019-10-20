@@ -42,7 +42,7 @@ def mocked_operations_delete(monkeypatch):
 
 
 @pytest.fixture
-def valid_lambda_event():
+def create_valid_lambda_event():
     """A valid lambda event object."""
     return {
         "RequestType": "Create",

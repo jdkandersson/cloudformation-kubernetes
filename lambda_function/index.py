@@ -23,6 +23,7 @@ class Parameters:
     stack_id: str
     request_id: str
     logical_resource_id: str
+    physical_resource_id: typing.Optional[str]
 
 
 def parameters_from_event(*, event: typing.Dict[str, typing.Any]) -> Parameters:
@@ -68,6 +69,7 @@ def parameters_from_event(*, event: typing.Dict[str, typing.Any]) -> Parameters:
         raise exceptions.MalformedEventError(
             "LogicalResourceId is a required property in the event."
         )
+    physical_resource_id = event.get("PhysicalResourceId")
 
     return Parameters(
         request_type,
@@ -76,6 +78,7 @@ def parameters_from_event(*, event: typing.Dict[str, typing.Any]) -> Parameters:
         stack_id,
         request_id,
         logical_resource_id,
+        physical_resource_id,
     )
 
 

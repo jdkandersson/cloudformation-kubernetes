@@ -88,7 +88,7 @@ def test_lambda_handler_malformed_event(event, _mocked_operations_create):
 @pytest.mark.lambda_function
 def test_create_create_call(
     mocked_operations_create: mock.MagicMock,
-    valid_lambda_event,
+    create_valid_lambda_event,
     _mocked_urllib3_pool_manager,
     _mocked_json_dumps,
 ):
@@ -98,7 +98,7 @@ def test_create_create_call(
     THEN create is called with the body from the request.
     """
     event = {
-        **valid_lambda_event,
+        **create_valid_lambda_event,
         **{"RequestType": "Create", "ResourceProperties": {"key": "value"}},
     }
 
@@ -110,7 +110,7 @@ def test_create_create_call(
 @pytest.mark.lambda_function
 def test_create_put_success(
     mocked_operations_create: mock.MagicMock,
-    valid_lambda_event,
+    create_valid_lambda_event,
     mocked_urllib3_pool_manager: mock.MagicMock,
 ):
     """
@@ -124,7 +124,7 @@ def test_create_put_success(
         "SUCCESS", None, "physical name 1"
     )
     event = {
-        **valid_lambda_event,
+        **create_valid_lambda_event,
         **{
             "RequestType": "Create",
             "ResponseURL": "response url 1",
@@ -154,7 +154,7 @@ def test_create_put_success(
 @pytest.mark.lambda_function
 def test_create_put_failure(
     mocked_operations_create: mock.MagicMock,
-    valid_lambda_event,
+    create_valid_lambda_event,
     mocked_urllib3_pool_manager: mock.MagicMock,
 ):
     """
@@ -168,7 +168,7 @@ def test_create_put_failure(
         "FAILURE", "reason 1", None
     )
     event = {
-        **valid_lambda_event,
+        **create_valid_lambda_event,
         **{
             "RequestType": "Create",
             "ResponseURL": "response url 1",
