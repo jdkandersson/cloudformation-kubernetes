@@ -5,6 +5,10 @@ class ParentError(Exception):
     """Parent of all custom exceptions."""
 
 
+class MalformedEventError(ParentError):
+    """The event passed to the lambda was missing a required property."""
+
+
 class ApiVersionMissingError(ParentError):
     """The apiVersion is missing."""
 

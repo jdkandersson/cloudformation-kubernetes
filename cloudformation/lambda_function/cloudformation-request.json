@@ -1,0 +1,14 @@
+{
+    "RequestType": "<Delete/Update/Create>",
+    "ServiceToken": "<identifier for the lambda function>",
+    "ResponseURL": "<url to send a put request to>",
+    "StackId": "<id of stack>",
+    "RequestId": "<id of request>",
+    "LogicalResourceId": "<name of the resource in the stack>",
+    "PhysicalResourceId": "<physical name as returned on create>",
+    "ResourceType": "AWS::CloudFormation::CustomResource",
+    "ResourceProperties": {
+        "ServiceToken": "<identifier for the lambda function>",
+        "<any key>": "<any value>"
+    }
+}
