@@ -1,7 +1,10 @@
 """Handle CloudFormation requests."""
 
 import dataclasses
+import json
 import typing
+
+import urllib3
 
 from . import exceptions
 from . import operations
@@ -77,10 +80,25 @@ def lambda_handler(event, _context):
     """Handle CLoudFormation custom resource requests."""
     # Checking that required keys are in the event
     parameters = parameters_from_event(event=event)
+    response_body: typing.Dict[str, str] = {
+        "StackId": parameters.stack_id,
+        "RequestId": parameters.request_id,
+        "LogicalResourceId": parameters.logical_resource_id,
+    }
 
     if parameters.request_type == "Create":
-        operations.create(body=parameters.resource_properties)
+        result = operations.create(body=parameters.resource_properties)
+        response_body["Status"] = result.status
+        if result.status == "SUCCESS":
+            response_body["PhysicalResourceId"] = result.physical_name
     else:
         raise exceptions.MalformedEventError(
             f"{parameters.request_type} RequestType has not been implemented."
         )
+
+    # Sending response
+    print(result)
+    pool = urllib3.PoolManager(cert_reqs="CERT_REQUIRED")
+    pool.request(
+        "PUT", parameters.response_url, body=json.dumps(response_body).encode("utf-8")
+    )

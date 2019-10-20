@@ -1,8 +1,10 @@
 """Fixtures for lambda function."""
 
+import json
 from unittest import mock
 
 import pytest
+import urllib3
 
 from lambda_function import operations
 
@@ -50,3 +52,33 @@ def valid_lambda_event():
         "RequestId": "request id 1",
         "LogicalResourceId": "logical resource id 1",
     }
+
+
+@pytest.fixture
+def mocked_urllib3_pool_manager(monkeypatch):
+    """Monkeypatch urllib3.PoolManager."""
+    mock_pool_manager = mock.MagicMock()
+    monkeypatch.setattr(urllib3, "PoolManager", mock_pool_manager)
+    return mock_pool_manager
+
+
+@pytest.fixture
+def _mocked_urllib3_pool_manager(
+    mocked_urllib3_pool_manager,  # pylint: disable=redefined-outer-name
+):
+    """For supressing unused-argument pylint error."""
+    return mocked_urllib3_pool_manager
+
+
+@pytest.fixture
+def mocked_json_dumps(monkeypatch):
+    """Monkeypatch json.dumps."""
+    mock_dumps = mock.MagicMock()
+    monkeypatch.setattr(json, "dumps", mock_dumps)
+    return mock_dumps
+
+
+@pytest.fixture
+def _mocked_json_dumps(mocked_json_dumps):  # pylint: disable=redefined-outer-name
+    """For supressing unused-argument pylint error."""
+    return mocked_json_dumps

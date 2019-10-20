@@ -1,11 +1,13 @@
 """Tests for the lambda function."""
 
+import json
 from unittest import mock
 
 import pytest
 
 from lambda_function import exceptions
 from lambda_function import index
+from lambda_function import operations
 
 
 @pytest.mark.parametrize(
@@ -85,7 +87,10 @@ def test_lambda_handler_malformed_event(event, _mocked_operations_create):
 
 @pytest.mark.lambda_function
 def test_create_create_call(
-    mocked_operations_create: mock.MagicMock, valid_lambda_event
+    mocked_operations_create: mock.MagicMock,
+    valid_lambda_event,
+    _mocked_urllib3_pool_manager,
+    _mocked_json_dumps,
 ):
     """
     GIVEN mocked operations.create and create Cloudformation request
@@ -100,3 +105,47 @@ def test_create_create_call(
     index.lambda_handler(event, mock.MagicMock())
 
     mocked_operations_create.assert_called_once_with(body={"key": "value"})
+
+
+@pytest.mark.lambda_function
+def test_create_put(
+    mocked_operations_create: mock.MagicMock,
+    valid_lambda_event,
+    mocked_urllib3_pool_manager: mock.MagicMock,
+):
+    """
+    GIVEN mocked operations.create that returns success response and
+        urllib3.PoolManager and create Cloudformation request
+    WHEN lambda_handler is called with the request
+    THEN PoolManager.request PUT is called with the ResponseURL from the request with
+        the correct body.
+    """
+    mocked_operations_create.return_value = operations.CreateReturn(
+        "SUCCESS", None, "physical name 1"
+    )
+    event = {
+        **valid_lambda_event,
+        **{
+            "RequestType": "Create",
+            "ResponseURL": "response url 1",
+            "StackId": "stack id 1",
+            "RequestId": "request id 1",
+            "LogicalResourceId": "logical resource id 1",
+        },
+    }
+
+    index.lambda_handler(event, mock.MagicMock())
+
+    mocked_urllib3_pool_manager.return_value.request.assert_called_once_with(
+        "PUT",
+        "response url 1",
+        body=json.dumps(
+            {
+                "StackId": "stack id 1",
+                "RequestId": "request id 1",
+                "LogicalResourceId": "logical resource id 1",
+                "Status": "SUCCESS",
+                "PhysicalResourceId": "physical name 1",
+            }
+        ).encode("utf-8"),
+    )
