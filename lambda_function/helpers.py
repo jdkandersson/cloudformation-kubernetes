@@ -139,24 +139,3 @@ def get_kind(*, body: typing.Dict[str, typing.Any]) -> str:
     if kind is None:
         raise exceptions.KindMissingError
     return kind
-
-
-def calculate_physical_name(*, body: typing.Dict[str, typing.Any]) -> str:
-    """
-    Calculate the physical name from the request body.
-
-    Assume the body has at least the metadata key with the name key.
-
-    Args:
-        body: The body defining the resource.
-
-    Returns:
-        The physical name as [namespace/]name.
-
-    """
-    metadata = body["metadata"]
-    name = metadata["name"]
-    namespace = metadata.get("namespace")
-    if namespace is None:
-        return name
-    return f"{namespace}/{name}"

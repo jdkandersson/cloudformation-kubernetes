@@ -151,26 +151,3 @@ def test_get_kind():
     kind = helpers.get_kind(body=body)
 
     assert kind == "kind 1"
-
-
-@pytest.mark.parametrize(
-    "body, expected_name",
-    [
-        ({"metadata": {"name": "name 1"}}, "name 1"),
-        (
-            {"metadata": {"namespace": "namespace 1", "name": "name 1"}},
-            "namespace 1/name 1",
-        ),
-    ],
-    ids=["name", "namespace and name"],
-)
-@pytest.mark.helper
-def test_calculate_physical_name(body, expected_name):
-    """
-    GIVEN resource body and expected name
-    WHEN calculate_physical_name is called
-    THEN the expected name is returned.
-    """
-    name = helpers.calculate_physical_name(body=body)
-
-    assert name == expected_name
