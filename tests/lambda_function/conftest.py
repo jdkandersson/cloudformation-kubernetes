@@ -46,7 +46,7 @@ def valid_lambda_event():
     """A valid lambda event object."""
     return {
         "RequestType": "Create",
-        "ResourceProperties": {"key": "value"},
+        "ResourceProperties": {"metadata": {"name": "name 1"}},
         "ResponseURL": "response url 1",
         "StackId": "stack id 1",
         "RequestId": "request id 1",
