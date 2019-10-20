@@ -108,7 +108,7 @@ def test_create_create_call(
 
 
 @pytest.mark.lambda_function
-def test_create_put(
+def test_create_put_success(
     mocked_operations_create: mock.MagicMock,
     valid_lambda_event,
     mocked_urllib3_pool_manager: mock.MagicMock,
@@ -146,6 +146,51 @@ def test_create_put(
                 "LogicalResourceId": "logical resource id 1",
                 "Status": "SUCCESS",
                 "PhysicalResourceId": "physical name 1",
+            }
+        ).encode("utf-8"),
+    )
+
+
+@pytest.mark.lambda_function
+def test_create_put_failure(
+    mocked_operations_create: mock.MagicMock,
+    valid_lambda_event,
+    mocked_urllib3_pool_manager: mock.MagicMock,
+):
+    """
+    GIVEN mocked operations.create that returns failure response and
+        urllib3.PoolManager and create Cloudformation request
+    WHEN lambda_handler is called with the request
+    THEN PoolManager.request PUT is called with the ResponseURL from the request with
+        the correct body.
+    """
+    mocked_operations_create.return_value = operations.CreateReturn(
+        "FAILURE", "reason 1", None
+    )
+    event = {
+        **valid_lambda_event,
+        **{
+            "RequestType": "Create",
+            "ResponseURL": "response url 1",
+            "StackId": "stack id 1",
+            "RequestId": "request id 1",
+            "LogicalResourceId": "logical resource id 1",
+        },
+    }
+
+    index.lambda_handler(event, mock.MagicMock())
+
+    mocked_urllib3_pool_manager.return_value.request.assert_called_once_with(
+        "PUT",
+        "response url 1",
+        body=json.dumps(
+            {
+                "StackId": "stack id 1",
+                "RequestId": "request id 1",
+                "LogicalResourceId": "logical resource id 1",
+                "Status": "FAILURE",
+                "PhysicalResourceId": "[FAIL]logical resource id 1",
+                "Reason": "reason 1",
             }
         ).encode("utf-8"),
     )

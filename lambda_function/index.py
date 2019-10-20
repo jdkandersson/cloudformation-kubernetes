@@ -9,6 +9,9 @@ import urllib3
 from . import exceptions
 from . import operations
 
+# A physical name used for when failures occur
+FAIL_PHYSICAL_NAME_PREFIX = "[FAIL]"
+
 
 @dataclasses.dataclass
 class Parameters:
@@ -91,6 +94,11 @@ def lambda_handler(event, _context):
         response_body["Status"] = result.status
         if result.status == "SUCCESS":
             response_body["PhysicalResourceId"] = result.physical_name
+        else:
+            response_body[
+                "PhysicalResourceId"
+            ] = f"{FAIL_PHYSICAL_NAME_PREFIX}{parameters.logical_resource_id}"
+            response_body["Reason"] = result.reason
     else:
         raise exceptions.MalformedEventError(
             f"{parameters.request_type} RequestType has not been implemented."
