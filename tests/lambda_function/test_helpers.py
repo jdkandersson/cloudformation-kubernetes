@@ -2,12 +2,15 @@
 
 import pytest
 from kubernetes import client
-from lambda_function import exceptions, helpers
+
+from lambda_function import exceptions
+from lambda_function import helpers
 
 from . import fixtures
 
 
 @pytest.mark.parametrize("group_version", fixtures.GROUP_VERSIONS)
+@pytest.mark.helper
 def test_calculate_client(group_version):
     """
     GIVEN combination of group and version
@@ -25,6 +28,7 @@ def test_calculate_client(group_version):
 
 
 @pytest.mark.parametrize("group_version_kind", fixtures.GROUP_VERSION_KINDS)
+@pytest.mark.helper
 def test_calculate_client_kind(group_version_kind):
     """
     GIVEN combination of group, version and kind
@@ -60,6 +64,7 @@ def test_calculate_client_kind(group_version_kind):
     ],
     ids=["empty", "metadata empty", "namespace in metadata"],
 )
+@pytest.mark.helper
 def test_calculate_namespace_empty(body, expected_namespace):
     """
     GIVEN body and expected namespace
@@ -83,6 +88,7 @@ def test_calculate_namespace_empty(body, expected_namespace):
         ("v1", "namespace", client.CoreV1Api().create_namespace, False),
     ],
 )
+@pytest.mark.helper
 def test_get_function(api_version, kind, expected_function, expected_namespaced):
     """
     GIVEN api version, kind, expected function and expected namespaced
@@ -97,6 +103,7 @@ def test_get_function(api_version, kind, expected_function, expected_namespaced)
     assert namespaced == expected_namespaced
 
 
+@pytest.mark.helper
 def test_get_api_version_missing():
     """
     GIVEN empty dictionary
@@ -107,6 +114,7 @@ def test_get_api_version_missing():
         helpers.get_api_version(body={})
 
 
+@pytest.mark.helper
 def test_get_api_version():
     """
     GIVEN dictionary with apiVersion
@@ -120,6 +128,7 @@ def test_get_api_version():
     assert api_version == "version 1"
 
 
+@pytest.mark.helper
 def test_get_kind_missing():
     """
     GIVEN empty dictionary
@@ -130,6 +139,7 @@ def test_get_kind_missing():
         helpers.get_kind(body={})
 
 
+@pytest.mark.helper
 def test_get_kind():
     """
     GIVEN dictionary with kind
@@ -141,3 +151,26 @@ def test_get_kind():
     kind = helpers.get_kind(body=body)
 
     assert kind == "kind 1"
+
+
+@pytest.mark.parametrize(
+    "body, expected_name",
+    [
+        ({"metadata": {"name": "name 1"}}, "name 1"),
+        (
+            {"metadata": {"namespace": "namespace 1", "name": "name 1"}},
+            "namespace 1/name 1",
+        ),
+    ],
+    ids=["name", "namespace and name"],
+)
+@pytest.mark.helper
+def test_calculate_physical_name(body, expected_name):
+    """
+    GIVEN resource body and expected name
+    WHEN calculate_physical_name is called
+    THEN the expected name is returned.
+    """
+    name = helpers.calculate_physical_name(body=body)
+
+    assert name == expected_name

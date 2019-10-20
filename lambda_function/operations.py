@@ -4,7 +4,8 @@ import typing
 
 import kubernetes
 
-from . import exceptions, helpers
+from . import exceptions
+from . import helpers
 
 
 class CreateReturn(typing.NamedTuple):
@@ -28,6 +29,8 @@ class CreateReturn(typing.NamedTuple):
 def create(*, body: typing.Dict[str, typing.Any]) -> CreateReturn:
     """
     Execute create command.
+
+    Assume body has at least metadata with a name.
 
     Args:
         body: The body to create.
@@ -82,6 +85,8 @@ def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyR
     """
     Execute update command.
 
+    Assume body has at least metadata with a name.
+
     Args:
         body: The body to update.
         physical_name: The namespace (if namespaced) and name of the resource.
@@ -119,6 +124,8 @@ def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyR
 def delete(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyReturn:
     """
     Execute delete command.
+
+    Assume body has at least metadata with a name.
 
     Args:
         body: The body to delete.
