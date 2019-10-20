@@ -403,8 +403,8 @@ def test_delete_put_success(
                 "StackId": "stack id 1",
                 "RequestId": "request id 1",
                 "LogicalResourceId": "logical resource id 1",
-                "Status": "SUCCESS",
                 "PhysicalResourceId": "physical resource id 1",
+                "Status": "SUCCESS",
             }
         ).encode("utf-8"),
     )
@@ -448,9 +448,77 @@ def test_delete_put_failure(
                 "StackId": "stack id 1",
                 "RequestId": "request id 1",
                 "LogicalResourceId": "logical resource id 1",
-                "Status": "FAILURE",
                 "PhysicalResourceId": "physical resource id 1",
+                "Status": "FAILURE",
                 "Reason": "reason 1",
+            }
+        ).encode("utf-8"),
+    )
+
+
+@pytest.mark.lambda_function
+def test_delete_fail_delete_call(
+    mocked_operations_delete: mock.MagicMock,
+    exists_lambda_event,
+    _mocked_urllib3_pool_manager,
+    _mocked_json_dumps,
+):
+    """
+    GIVEN mocked operations.delete and delete Cloudformation request with fail physical
+        resource id
+    WHEN lambda_handler is called with the request
+    THEN delete is not called.
+    """
+    event = {
+        **exists_lambda_event,
+        **{
+            "RequestType": "Delete",
+            "ResourceProperties": {"key": "value"},
+            "PhysicalResourceId": "[FAIL]physical resource id 1",
+        },
+    }
+
+    index.lambda_handler(event, mock.MagicMock())
+
+    mocked_operations_delete.assert_not_called()
+
+
+@pytest.mark.lambda_function
+def test_delete_fail_put(
+    exists_lambda_event, mocked_urllib3_pool_manager: mock.MagicMock
+):
+    """
+    GIVEN mocked operations.delete that returns success response and
+        urllib3.PoolManager and delete Cloudformation request with fail physical
+        resource id
+    WHEN lambda_handler is called with the request
+    THEN PoolManager.request PUT is called with the ResponseURL from the request with
+        the correct body.
+    """
+    event = {
+        **exists_lambda_event,
+        **{
+            "RequestType": "Delete",
+            "ResponseURL": "response url 1",
+            "StackId": "stack id 1",
+            "RequestId": "request id 1",
+            "LogicalResourceId": "logical resource id 1",
+            "PhysicalResourceId": "[FAIL]physical resource id 1",
+        },
+    }
+
+    index.lambda_handler(event, mock.MagicMock())
+
+    mocked_urllib3_pool_manager.return_value.request.assert_called_once_with(
+        "PUT",
+        "response url 1",
+        body=json.dumps(
+            {
+                "StackId": "stack id 1",
+                "RequestId": "request id 1",
+                "LogicalResourceId": "logical resource id 1",
+                "PhysicalResourceId": "[FAIL]physical resource id 1",
+                "Status": "SUCCESS",
             }
         ).encode("utf-8"),
     )
