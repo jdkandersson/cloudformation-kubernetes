@@ -5,7 +5,10 @@ from unittest import mock
 
 import kubernetes
 import pytest
-from lambda_function import exceptions, helpers, operations
+
+from lambda_function import exceptions
+from lambda_function import helpers
+from lambda_function import operations
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -287,7 +290,7 @@ def test_update_get_api_version_raises(mocked_get_api_version: mock.MagicMock):
         body=mock.MagicMock(), physical_name="physical name 1"
     )
 
-    assert return_value == operations.ModifyReturn("FAILURE", "apiVersion is required.")
+    assert return_value == operations.ExistsReturn("FAILURE", "apiVersion is required.")
 
 
 def test_update_get_kind_call(mocked_get_kind: mock.MagicMock):
@@ -315,7 +318,7 @@ def test_update_get_kind_raises(mocked_get_kind: mock.MagicMock):
         body=mock.MagicMock(), physical_name="physical name 1"
     )
 
-    assert return_value == operations.ModifyReturn("FAILURE", "kind is required.")
+    assert return_value == operations.ExistsReturn("FAILURE", "kind is required.")
 
 
 def test_update_get_function_call(
@@ -374,7 +377,7 @@ def test_update_client_function_return(mocked_get_function: mock.MagicMock):
 
     return_value = operations.update(body=mock.MagicMock(), physical_name="name 1")
 
-    assert return_value == operations.ModifyReturn("SUCCESS", None)
+    assert return_value == operations.ExistsReturn("SUCCESS", None)
 
 
 def test_update_client_function_raises(mocked_get_function: mock.MagicMock):
@@ -394,7 +397,7 @@ def test_update_client_function_raises(mocked_get_function: mock.MagicMock):
 
     return_value = operations.update(body=mock.MagicMock(), physical_name="name 1")
 
-    assert return_value == operations.ModifyReturn(
+    assert return_value == operations.ExistsReturn(
         "FAILURE", "(400)\nReason: reason 1\n"
     )
 
@@ -441,7 +444,7 @@ def test_update_client_function_namespace_return(mocked_get_function: mock.Magic
         body=mock.MagicMock(), physical_name="namespace 1/name 1"
     )
 
-    assert return_value == operations.ModifyReturn("SUCCESS", None)
+    assert return_value == operations.ExistsReturn("SUCCESS", None)
 
 
 def test_update_client_function_namespace_raises(mocked_get_function: mock.MagicMock):
@@ -463,7 +466,7 @@ def test_update_client_function_namespace_raises(mocked_get_function: mock.Magic
         body=mock.MagicMock(), physical_name="namespace 1/name 1"
     )
 
-    assert return_value == operations.ModifyReturn(
+    assert return_value == operations.ExistsReturn(
         "FAILURE", "(400)\nReason: reason 1\n"
     )
 
@@ -493,7 +496,7 @@ def test_delete_get_api_version_raises(mocked_get_api_version: mock.MagicMock):
         body=mock.MagicMock(), physical_name="physical name 1"
     )
 
-    assert return_value == operations.ModifyReturn("FAILURE", "apiVersion is required.")
+    assert return_value == operations.ExistsReturn("FAILURE", "apiVersion is required.")
 
 
 def test_delete_get_kind_call(mocked_get_kind: mock.MagicMock):
@@ -521,7 +524,7 @@ def test_delete_get_kind_raises(mocked_get_kind: mock.MagicMock):
         body=mock.MagicMock(), physical_name="physical name 1"
     )
 
-    assert return_value == operations.ModifyReturn("FAILURE", "kind is required.")
+    assert return_value == operations.ExistsReturn("FAILURE", "kind is required.")
 
 
 def test_delete_get_function_call(
@@ -579,7 +582,7 @@ def test_delete_client_function_return(mocked_get_function: mock.MagicMock):
 
     return_value = operations.delete(body=mock.MagicMock(), physical_name="name 1")
 
-    assert return_value == operations.ModifyReturn("SUCCESS", None)
+    assert return_value == operations.ExistsReturn("SUCCESS", None)
 
 
 def test_delete_client_function_raises(mocked_get_function: mock.MagicMock):
@@ -599,7 +602,7 @@ def test_delete_client_function_raises(mocked_get_function: mock.MagicMock):
 
     return_value = operations.delete(body=mock.MagicMock(), physical_name="name 1")
 
-    assert return_value == operations.ModifyReturn(
+    assert return_value == operations.ExistsReturn(
         "FAILURE", "(400)\nReason: reason 1\n"
     )
 
@@ -643,7 +646,7 @@ def test_delete_client_function_namespace_return(mocked_get_function: mock.Magic
         body=mock.MagicMock(), physical_name="namespace 1/name 1"
     )
 
-    assert return_value == operations.ModifyReturn("SUCCESS", None)
+    assert return_value == operations.ExistsReturn("SUCCESS", None)
 
 
 def test_delete_client_function_namespace_raises(mocked_get_function: mock.MagicMock):
@@ -665,6 +668,6 @@ def test_delete_client_function_namespace_raises(mocked_get_function: mock.Magic
         body=mock.MagicMock(), physical_name="namespace 1/name 1"
     )
 
-    assert return_value == operations.ModifyReturn(
+    assert return_value == operations.ExistsReturn(
         "FAILURE", "(400)\nReason: reason 1\n"
     )

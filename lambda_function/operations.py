@@ -67,7 +67,7 @@ def create(*, body: typing.Dict[str, typing.Any]) -> CreateReturn:
         return CreateReturn("FAILURE", str(exc), None)
 
 
-class ModifyReturn(typing.NamedTuple):
+class ExistsReturn(typing.NamedTuple):
     """
     Structure of the update return value.
 
@@ -81,7 +81,7 @@ class ModifyReturn(typing.NamedTuple):
     reason: typing.Optional[str]
 
 
-def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyReturn:
+def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ExistsReturn:
     """
     Execute update command.
 
@@ -99,7 +99,7 @@ def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyR
         api_version = helpers.get_api_version(body=body)
         kind = helpers.get_kind(body=body)
     except exceptions.ParentError as exc:
-        return ModifyReturn("FAILURE", str(exc))
+        return ExistsReturn("FAILURE", str(exc))
     client_function, namespaced = helpers.get_function(
         api_version=api_version, kind=kind, operation="update"
     )
@@ -108,20 +108,20 @@ def update(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyR
     if not namespaced:
         try:
             client_function(body=body, name=physical_name)
-            return ModifyReturn("SUCCESS", None)
+            return ExistsReturn("SUCCESS", None)
         except kubernetes.client.rest.ApiException as exc:
-            return ModifyReturn("FAILURE", str(exc))
+            return ExistsReturn("FAILURE", str(exc))
 
     # Handling namespaced
     namespace, name = physical_name.split("/")
     try:
         client_function(body=body, namespace=namespace, name=name)
-        return ModifyReturn("SUCCESS", None)
+        return ExistsReturn("SUCCESS", None)
     except kubernetes.client.rest.ApiException as exc:
-        return ModifyReturn("FAILURE", str(exc))
+        return ExistsReturn("FAILURE", str(exc))
 
 
-def delete(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyReturn:
+def delete(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ExistsReturn:
     """
     Execute delete command.
 
@@ -139,7 +139,7 @@ def delete(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyR
         api_version = helpers.get_api_version(body=body)
         kind = helpers.get_kind(body=body)
     except exceptions.ParentError as exc:
-        return ModifyReturn("FAILURE", str(exc))
+        return ExistsReturn("FAILURE", str(exc))
     client_function, namespaced = helpers.get_function(
         api_version=api_version, kind=kind, operation="delete"
     )
@@ -148,14 +148,14 @@ def delete(*, body: typing.Dict[str, typing.Any], physical_name: str) -> ModifyR
     if not namespaced:
         try:
             client_function(name=physical_name)
-            return ModifyReturn("SUCCESS", None)
+            return ExistsReturn("SUCCESS", None)
         except kubernetes.client.rest.ApiException as exc:
-            return ModifyReturn("FAILURE", str(exc))
+            return ExistsReturn("FAILURE", str(exc))
 
     # Handling namespaced
     namespace, name = physical_name.split("/")
     try:
         client_function(namespace=namespace, name=name)
-        return ModifyReturn("SUCCESS", None)
+        return ExistsReturn("SUCCESS", None)
     except kubernetes.client.rest.ApiException as exc:
-        return ModifyReturn("FAILURE", str(exc))
+        return ExistsReturn("FAILURE", str(exc))

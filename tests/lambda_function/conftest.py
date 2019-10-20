@@ -42,7 +42,7 @@ def mocked_operations_delete(monkeypatch):
 
 
 @pytest.fixture
-def create_valid_lambda_event():
+def create_lambda_event():
     """A valid lambda event object."""
     return {
         "RequestType": "Create",
@@ -51,6 +51,20 @@ def create_valid_lambda_event():
         "StackId": "stack id 1",
         "RequestId": "request id 1",
         "LogicalResourceId": "logical resource id 1",
+    }
+
+
+@pytest.fixture
+def exists_lambda_event():
+    """A valid lambda event object."""
+    return {
+        "RequestType": "Create",
+        "ResourceProperties": {"key": "value"},
+        "ResponseURL": "response url 1",
+        "StackId": "stack id 1",
+        "RequestId": "request id 1",
+        "LogicalResourceId": "logical resource id 1",
+        "PhysicalResourceId": "physical resource id 1",
     }
 
 
