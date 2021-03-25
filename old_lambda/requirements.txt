@@ -1,6 +1,6 @@
 # Pin minor version of dependencies to allow for security updates
 -r lambda_function/requirements.txt
-PyYAML==5.1
+PyYAML==5.4
 boto3==1.9
 troposphere==2.5
 awacs==0.9
